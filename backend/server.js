@@ -74,7 +74,7 @@ app.post("/criar-pedido", async (req, res) => {
         description: `Pedido King Angus #${pedidoId.slice(0, 8)}`,
         payment_method_id: "pix",
         payer: {
-          email: "test_user_123@testuser.com",
+          email: cliente?.email || "cliente@kingangus.com",
         },
         external_reference: pedidoId,
         ...(process.env.WEBHOOK_BASE_URL && {

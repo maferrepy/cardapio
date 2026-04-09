@@ -20,7 +20,7 @@ app.use(cors()); // Em produção, restrinja para seu domínio frontend
 // ============================================================
 
 const mpClient = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN,
+  accessToken: process.env.MP_ACCESS_TOKEN?.trim(),
   options: {
     timeout: 5000,
     idempotencyKey: undefined, // será gerado por pedido

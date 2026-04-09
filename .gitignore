@@ -1,0 +1,26 @@
+# Dependências
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Variáveis de ambiente (NUNCA commitar)
+.env
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Arquivos pessoais
+ngrok_recovery_codes.txt
+ordem.txt
+arquivos/
+"Novo(a) Documento de Texto.txt"

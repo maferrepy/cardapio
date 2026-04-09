@@ -1409,7 +1409,10 @@ async function prepareOrder(){
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        itens: cart.map(c => ({nome:c.name, quantidade:c.qty, preco:c.unitPrice})),
+        itens: [
+          ...cart.map(c => ({nome:c.name, quantidade:c.qty, preco:c.unitPrice})),
+          ...(fee > 0 ? [{nome:'Taxa de entrega', quantidade:1, preco:fee}] : [])
+        ],
         cliente: {nome, email:`${tel.replace(/\D/g,'')}@pedido.com`, cpf:'00000000000'}
       })
     });

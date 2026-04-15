@@ -75,6 +75,10 @@ app.post("/criar-pedido", async (req, res) => {
         payment_method_id: "pix",
         payer: {
           email: cliente?.email || "cliente@kingangus.com",
+          identification: {
+            type: "CPF",
+            number: cliente?.cpf?.replace(/\D/g,'') || "00000000000",
+          },
         },
         external_reference: pedidoId,
         ...(process.env.WEBHOOK_BASE_URL && {

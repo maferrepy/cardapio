@@ -913,6 +913,11 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <input id="f-nome" type="text" placeholder="Seu nome">
       <div class="err" id="err-nome"></div>
     </div>
+    <div class="form-group">
+      <label>CPF *</label>
+      <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)">
+      <div class="err" id="err-cpf"></div>
+    </div>
     <div id="delivery-fields">
       <div class="form-group">
         <label>Endereço completo *</label>
@@ -1356,16 +1361,33 @@ function copyPix(){
   }).catch(()=>toast('Copie manualmente: '+code));
 }
 
+function maskCpf(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length > 9)      v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if(v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+  else if(v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+  el.value = v;
+}
+
 function validate(){
   let ok=true;
   const base=[['f-nome','err-nome'],['f-tel','err-tel']];
   const addrFields=[['f-end','err-end'],['f-ref','err-ref']];
   const fields = orderType==='delivery' ? [...base,...addrFields] : base;
-  [...base,...addrFields].forEach(([,eid])=>document.getElementById(eid).textContent='');
+  [...base,...addrFields,'f-cpf','err-cpf'].forEach(item=>{
+    const eid = Array.isArray(item) ? item[1] : item;
+    const el = document.getElementById(eid);
+    if(el) el.textContent='';
+  });
   fields.forEach(([fid,eid])=>{
     const v=document.getElementById(fid).value.trim();
     if(!v){document.getElementById(eid).textContent='Campo obrigatório';ok=false;}
   });
+  // Valida CPF
+  const cpfDigits = document.getElementById('f-cpf').value.replace(/\D/g,'');
+  if(cpfDigits.length !== 11){
+    document.getElementById('err-cpf').textContent='CPF inválido (11 dígitos)';ok=false;
+  }
   return ok;
 }
 
@@ -1383,6 +1405,7 @@ async function prepareOrder(){
 
   const nome = document.getElementById('f-nome').value.trim();
   const tel  = document.getElementById('f-tel').value.trim();
+  const cpf  = document.getElementById('f-cpf').value.replace(/\D/g,'');
   const end  = orderType==='delivery' ? document.getElementById('f-end').value.trim() : '';
   const ref  = orderType==='delivery' ? document.getElementById('f-ref').value.trim() : '';
   const obs  = document.getElementById('f-obs').value.trim();
@@ -1413,7 +1436,7 @@ async function prepareOrder(){
           ...cart.map(c => ({nome:c.name, quantidade:c.qty, preco:c.unitPrice})),
           ...(fee > 0 ? [{nome:'Taxa de entrega', quantidade:1, preco:fee}] : [])
         ],
-        cliente: {nome, email:`${tel.replace(/\D/g,'')}@pedido.com`, cpf:'00000000000'}
+        cliente: {nome, email:`${tel.replace(/\D/g,'')}@pedido.com`, cpf}
       })
     });
     if(pixRes.ok){

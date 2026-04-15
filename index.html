@@ -899,7 +899,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <label>Telefone *</label>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <div style="flex:1">
-          <input id="f-tel" type="tel" placeholder="(41) 99999-9999" oninput="lookupCliente(this.value)">
+          <input id="f-tel" type="tel" placeholder="(41) 99999-9999" oninput="lookupCliente(this.value);tryAutoGenerate()">
           <div class="err" id="err-tel"></div>
         </div>
       </div>
@@ -910,13 +910,13 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
     </div>
     <div class="form-group">
       <label>Nome completo *</label>
-      <input id="f-nome" type="text" placeholder="Seu nome">
+      <input id="f-nome" type="text" placeholder="Seu nome" oninput="tryAutoGenerate()">
       <div class="err" id="err-nome"></div>
     </div>
     <div id="delivery-fields">
       <div class="form-group">
         <label>Endereço completo *</label>
-        <input id="f-end" type="text" placeholder="Rua, número, bairro, cidade">
+        <input id="f-end" type="text" placeholder="Rua, número, bairro, cidade" oninput="tryAutoGenerate()">
         <div class="err" id="err-end"></div>
       </div>
       <div class="form-group">
@@ -933,13 +933,13 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <div style="display:flex;gap:10px;margin-bottom:10px;">
         <div style="flex:1">
           <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px;">CPF *</label>
-          <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)" style="width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:15px;font-family:inherit;">
+          <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this);tryAutoGenerate()" style="width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:15px;font-family:inherit;">
           <div class="err" id="err-cpf"></div>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:12px;">
         <label>E-mail *</label>
-        <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com">
+        <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" oninput="tryAutoGenerate()">
         <div class="err" id="err-email"></div>
       </div>
       <div class="pix-qr-wrap">
@@ -947,8 +947,8 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
         <img id="pix-qr-img" width="180" height="180" alt="QR Code PIX" style="display:none;border-radius:8px;">
         <!-- Placeholder enquanto o PIX não foi gerado -->
         <div id="pix-qr-placeholder" style="width:180px;height:180px;background:#111;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #333;color:#555;font-size:12px;text-align:center;padding:12px;line-height:1.5;">
-          <span style="font-size:30px;margin-bottom:8px;">💳</span>
-          Confirme seus dados para gerar o PIX dinâmico
+          <span id="pix-ph-icon" style="font-size:30px;margin-bottom:8px;">💳</span>
+          <span id="pix-ph-txt">Preencha CPF e e-mail para gerar o PIX</span>
         </div>
       </div>
       <div class="pix-key-label">Chave PIX — Copia e Cola</div>
@@ -962,28 +962,6 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       </div>
     </div>
     <div class="cart-totals" id="checkout-totals"></div>
-
-    <!-- PASSO 1: botão que prepara o pedido (sem abrir WA ainda) -->
-    <button class="finalize-btn" id="finalize-btn" onclick="prepareOrder()">
-      <span>💬</span> GERAR PEDIDO
-    </button>
-
-    <!-- PASSO 2: aparece após prepareOrder(), link <a> real para o WA -->
-    <div id="wa-ready-box" style="display:none;margin-top:14px;">
-      <div style="background:rgba(37,211,102,.1);border:1.5px solid #25d366;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
-        <div style="font-size:13px;color:#6dc96d;margin-bottom:10px;font-weight:700;letter-spacing:.5px;">✅ PEDIDO PRONTO! TOQUE ABAIXO PARA ENVIAR</div>
-        <a id="wa-send-link" href="#" target="_blank"
-           onclick="onWaSendClick()"
-           style="display:flex;align-items:center;justify-content:center;gap:10px;
-                  background:#25d366;color:#fff;text-decoration:none;
-                  font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;
-                  padding:16px;border-radius:10px;
-                  box-shadow:0 4px 20px rgba(37,211,102,.4);">
-          <span>💬</span> ABRIR WHATSAPP E ENVIAR
-        </a>
-      </div>
-    </div>
-
     <button class="close-btn" style="margin-top:6px;" onclick="document.getElementById('checkout-overlay').classList.remove('open')">Voltar</button>
   </div>
 </div>
@@ -1007,6 +985,25 @@ const API_URL = 'https://king-angus-backend-production.up.railway.app';
 let pixDinamicoCode    = ''; // código copia e cola dinâmico
 let pixPedidoId        = null; // ID do pedido no backend MP
 let pixPollingInterval = null; // referência do setInterval
+let pixGerado          = false; // evita gerar duas vezes
+let pendingWaMsg       = null;  // mensagem WA montada, enviada após pagamento
+let autoGenTimer       = null;  // debounce do auto-trigger
+
+function tryAutoGenerate(){
+  if(pixGerado) return;
+  clearTimeout(autoGenTimer);
+  autoGenTimer = setTimeout(()=>{
+    const nome  = document.getElementById('f-nome').value.trim();
+    const tel   = document.getElementById('f-tel').value.trim();
+    const cpf   = document.getElementById('f-cpf').value;
+    const email = document.getElementById('f-email').value.trim();
+    const end   = orderType==='delivery' ? document.getElementById('f-end').value.trim() : 'ok';
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(nome && tel && validarCpf(cpf) && emailOk && end){
+      prepareOrder();
+    }
+  }, 700);
+}
 
 async function saveOrderToFirebase(orderData){
   try {
@@ -1343,12 +1340,15 @@ function lookupCliente(val){
 function openCheckout(){
   if(!cart.length){toast('Carrinho vazio!');return;}
   document.getElementById('cart-overlay').classList.remove('open');
-  // Reseta QR Code para o estado de placeholder (PIX dinâmico gerado ao confirmar)
+  // Reseta estado do PIX
+  pixGerado = false; pendingWaMsg = null; clearTimeout(autoGenTimer);
   const qrImg = document.getElementById('pix-qr-img');
   const qrPh  = document.getElementById('pix-qr-placeholder');
   if(qrImg){ qrImg.src=''; qrImg.style.display='none'; }
   if(qrPh)  qrPh.style.display='flex';
-  document.getElementById('pix-key-display').textContent='Será gerado ao confirmar o pedido...';
+  document.getElementById('pix-ph-icon').textContent='💳';
+  document.getElementById('pix-ph-txt').textContent='Preencha CPF e e-mail para gerar o PIX';
+  document.getElementById('pix-key-display').textContent='Será gerado automaticamente...';
   document.getElementById('pix-key-display').style.color='#555';
   pixDinamicoCode = '';
   if(pixPollingInterval){ clearInterval(pixPollingInterval); pixPollingInterval=null; }
@@ -1413,16 +1413,14 @@ function validate(){
 }
 
 
-// ═══ PASSO 1: prepara o pedido, salva no Firebase, monta link WA ═══
-// Chamado pelo botão "GERAR PEDIDO" — pode usar async sem problema
-// pois NÃO chama window.open() — apenas seta um href num <a> normal.
+// ═══ Gera PIX automaticamente quando todos os campos estão válidos ═══
 async function prepareOrder(){
-  if(!validate()) return;
+  if(pixGerado) return;
+  pixGerado = true;
 
-  const btn = document.getElementById('finalize-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span style="display:inline-block;animation:spin .8s linear infinite">⏳</span> GERANDO PEDIDO...';
-  btn.style.opacity = '.7';
+  // Mostra spinner no placeholder do QR
+  document.getElementById('pix-ph-icon').textContent = '⏳';
+  document.getElementById('pix-ph-txt').textContent  = 'Gerando seu PIX...';
 
   const nome  = document.getElementById('f-nome').value.trim();
   const tel   = document.getElementById('f-tel').value.trim();
@@ -1511,25 +1509,11 @@ async function prepareOrder(){
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `💳 *Pagamento:* PIX\n`;
   msg += `🔑 *Chave PIX:* ${PIX_KEY}\n`;
-  msg += `\n⚠️ _Envie o comprovante do PIX para confirmar o pedido!_`;
+  msg += `✅ _Pagamento PIX confirmado automaticamente!_`;
 
-  // Seta o href do link <a> — NÃO usa window.open()
-  const waLink = document.getElementById('wa-send-link');
-  waLink.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-
-  // Guarda dados para usar depois do clique
-  waLink._orderId = orderId;
-  waLink._nome    = nome;
-  waLink._tel     = tel;
-  waLink._end     = end;
-  waLink._ref     = ref;
-  waLink._orderType = orderType;
-
+  // Guarda msg e dados para envio automático após pagamento
+  pendingWaMsg = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   saveCliente(tel, nome, end, ref);
-
-  // Mostra botão WA, esconde botão de gerar
-  btn.style.display = 'none';
-  document.getElementById('wa-ready-box').style.display = 'block';
 }
 
 // ═══ PASSO 2: chamado quando o cliente toca no link do WA ═══
@@ -1603,15 +1587,15 @@ function startPixPolling(pixId, firebaseId){
 // Chamado automaticamente quando pagamento PIX é confirmado
 function confirmarPagamentoAuto(firebaseId){
   const nome = document.getElementById('f-nome').value.trim();
-  // Limpa carrinho e reseta interface
+
+  // Envia pedido automaticamente para o WhatsApp da loja
+  if(pendingWaMsg) window.open(pendingWaMsg, '_blank');
+
+  // Limpa estado
   cart = [];
+  pixGerado = false;
+  pendingWaMsg = null;
   orderType = 'delivery';
-  const btn = document.getElementById('finalize-btn');
-  btn.disabled=false;
-  btn.innerHTML='<span>💬</span> GERAR PEDIDO';
-  btn.style.opacity='1';
-  btn.style.display='';
-  document.getElementById('wa-ready-box').style.display='none';
   document.getElementById('checkout-overlay').classList.remove('open');
   updateCartFloat();
   // Abre tela de tracking já no status "aceito"

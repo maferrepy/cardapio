@@ -75,6 +75,8 @@ app.post("/criar-pedido", async (req, res) => {
         payment_method_id: "pix",
         payer: {
           email: cliente?.email || "cliente@kingangus.com",
+          first_name: cliente?.nome?.split(' ')[0] || "Cliente",
+          last_name:  cliente?.nome?.split(' ').slice(1).join(' ') || "King Angus",
           identification: {
             type: "CPF",
             number: cliente?.cpf?.replace(/\D/g,'') || "00000000000",

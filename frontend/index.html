@@ -913,16 +913,6 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <input id="f-nome" type="text" placeholder="Seu nome">
       <div class="err" id="err-nome"></div>
     </div>
-    <div class="form-group">
-      <label>CPF *</label>
-      <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)">
-      <div class="err" id="err-cpf"></div>
-    </div>
-    <div class="form-group">
-      <label>E-mail *</label>
-      <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com">
-      <div class="err" id="err-email"></div>
-    </div>
     <div id="delivery-fields">
       <div class="form-group">
         <label>Endereço completo *</label>
@@ -930,17 +920,28 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
         <div class="err" id="err-end"></div>
       </div>
       <div class="form-group">
-        <label>Ponto de referência *</label>
-        <input id="f-ref" type="text" placeholder="Ex: próximo ao mercado X">
-        <div class="err" id="err-ref"></div>
+        <label>Ponto de referência</label>
+        <input id="f-ref" type="text" placeholder="Ex: próximo ao mercado X (opcional)">
       </div>
     </div>
     <div class="form-group">
-      <label>Observações gerais</label>
-      <textarea id="f-obs" rows="2" placeholder="Alguma observação geral do pedido?"></textarea>
+      <label>Observações</label>
+      <textarea id="f-obs" rows="2" placeholder="Alguma observação? (opcional)"></textarea>
     </div>
     <div class="pix-box">
       <div class="pix-title">💳 Pagamento via PIX</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex:1">
+          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px;">CPF *</label>
+          <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)" style="width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:15px;font-family:inherit;">
+          <div class="err" id="err-cpf"></div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>E-mail *</label>
+        <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com">
+        <div class="err" id="err-email"></div>
+      </div>
       <div class="pix-qr-wrap">
         <!-- QR Code dinâmico do Mercado Pago -->
         <img id="pix-qr-img" width="180" height="180" alt="QR Code PIX" style="display:none;border-radius:8px;">
@@ -1390,7 +1391,7 @@ function validarCpf(cpf){
 function validate(){
   let ok=true;
   const base=[['f-nome','err-nome'],['f-tel','err-tel']];
-  const addrFields=[['f-end','err-end'],['f-ref','err-ref']];
+  const addrFields=[['f-end','err-end']];
   const fields = orderType==='delivery' ? [...base,...addrFields] : base;
   ['err-nome','err-tel','err-cpf','err-email','err-end','err-ref'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.textContent='';

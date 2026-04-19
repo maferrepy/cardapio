@@ -455,12 +455,110 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
   letter-spacing: .5px;
 }
 
+/* ══════════════════════════════════════════
+   DESKTOP LAYOUT  ≥ 900px
+══════════════════════════════════════════ */
+@media (min-width: 900px) {
+
+  /* ── Wrapper central ── */
+  .hero { padding: 56px 40px 36px; }
+  .menu-body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* ── Logo circular no hero ── */
+  .hero-logo {
+    display: flex;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: 3px solid var(--red);
+    background: #1a1a1a;
+    align-items: center; justify-content: center;
+    font-size: 56px;
+    margin: 0 auto 14px;
+    box-shadow: 0 0 32px rgba(214,40,40,.35);
+  }
+  .crown { display: none; } /* logo substitui a coroa no desktop */
+
+  /* ── Nav centralizada ── */
+  .sticky-nav {
+    justify-content: center;
+    padding: 14px 24px;
+    overflow-x: visible;
+  }
+
+  /* ── Grid 2 colunas ── */
+  .section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 36px;
+  }
+  .section-header-v2 {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  /* ── Cards horizontais ── */
+  .item-card-img {
+    display: flex;
+    flex-direction: row;
+    height: 148px;
+    margin-bottom: 0;
+  }
+  .item-img-wrap {
+    width: 148px;
+    min-width: 148px;
+    height: 100%;
+    border-radius: 12px 0 0 12px;
+  }
+  .item-img-wrap img { border-radius: 12px 0 0 12px; }
+  .placeholder-landscape {
+    width: 148px;
+    min-width: 148px;
+    height: 100%;
+    border-radius: 12px 0 0 12px;
+  }
+  .item-img-price { bottom: 8px; right: 10px; }
+  .item-img-price .price-main { font-size: 22px; }
+
+  .item-img-body {
+    flex: 1;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .item-img-name { font-size: 18px; margin-bottom: 4px; }
+  .item-img-desc {
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item-img-separator { margin-bottom: 8px; }
+
+  /* hover no desktop */
+  .item-card-img:hover { border-color: var(--red); }
+  .item-card:hover { border-color: var(--red); }
+  .nav-btn:hover:not(.active) { border-color: var(--red); color: var(--red); }
+}
+
+/* hero-logo escondido no mobile */
+.hero-logo { display: none; }
+
 </style>
 </head>
 <body>
 
 <!-- HERO -->
 <div class="hero">
+  <div class="hero-logo">👑</div>
   <span class="crown">👑</span>
   <h1>KING ANGUS</h1>
   <div class="hero-sub">Smash Burgers</div>

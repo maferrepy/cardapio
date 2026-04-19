@@ -885,7 +885,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
     </div>
 
     <!-- BOTÃO COMPROVANTE -->
-    <a id="comprovante-btn" href="#" class="comprovante-btn comprovante-pulse" onclick="enviarComprovante(event)" style="margin-top:24px;">
+    <a id="comprovante-btn" href="#" class="comprovante-btn comprovante-pulse" onclick="enviarComprovante(event)" target="_blank" style="margin-top:24px;">
       <span>📎</span> ENVIAR COMPROVANTE PIX
     </a>
 
@@ -1146,8 +1146,9 @@ function updateComprovanteBtn(orderId, nome){
 function enviarComprovante(e){
   e.preventDefault();
   const btn = document.getElementById('comprovante-btn');
-  if(btn && btn.href && btn.href !== '#'){
-    window.open(btn.href, '_blank');
+  const url = btn && btn.getAttribute('href');
+  if(url && url.includes('wa.me')){
+    window.open(url, '_blank');
   }
 }
 

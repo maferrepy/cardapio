@@ -899,7 +899,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <label>Telefone *</label>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <div style="flex:1">
-          <input id="f-tel" type="tel" placeholder="(41) 99999-9999" oninput="lookupCliente(this.value);tryAutoGenerate()">
+          <input id="f-tel" type="tel" placeholder="(41) 99999-9999" oninput="lookupCliente(this.value)">
           <div class="err" id="err-tel"></div>
         </div>
       </div>
@@ -910,13 +910,13 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
     </div>
     <div class="form-group">
       <label>Nome completo *</label>
-      <input id="f-nome" type="text" placeholder="Seu nome" oninput="tryAutoGenerate()">
+      <input id="f-nome" type="text" placeholder="Seu nome">
       <div class="err" id="err-nome"></div>
     </div>
     <div id="delivery-fields">
       <div class="form-group">
         <label>Endereço completo *</label>
-        <input id="f-end" type="text" placeholder="Rua, número, bairro, cidade" oninput="tryAutoGenerate()">
+        <input id="f-end" type="text" placeholder="Rua, número, bairro, cidade">
         <div class="err" id="err-end"></div>
       </div>
       <div class="form-group">
@@ -928,35 +928,28 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <label>Observações</label>
       <textarea id="f-obs" rows="2" placeholder="Alguma observação? (opcional)"></textarea>
     </div>
-    <div class="pix-box">
+    <div class="pix-box" id="pix-box" style="display:none;">
       <div class="pix-title">💳 Pagamento via PIX</div>
-      <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <div style="flex:1">
-          <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px;">CPF *</label>
-          <input id="f-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this);tryAutoGenerate()" style="width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:15px;font-family:inherit;">
-          <div class="err" id="err-cpf"></div>
-        </div>
-      </div>
       <div class="pix-qr-wrap">
-        <!-- QR Code dinâmico do Mercado Pago -->
-        <img id="pix-qr-img" width="180" height="180" alt="QR Code PIX" style="display:none;border-radius:8px;">
-        <!-- Placeholder enquanto o PIX não foi gerado -->
-        <div id="pix-qr-placeholder" style="width:180px;height:180px;background:#111;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #333;color:#555;font-size:12px;text-align:center;padding:12px;line-height:1.5;">
-          <span id="pix-ph-icon" style="font-size:30px;margin-bottom:8px;">💳</span>
-          <span id="pix-ph-txt">Preencha CPF e e-mail para gerar o PIX</span>
-        </div>
+        <div id="pix-qr-div" style="border-radius:8px;overflow:hidden;"></div>
       </div>
       <div class="pix-key-label">Chave PIX — Copia e Cola</div>
       <div class="pix-key-row">
-        <div class="pix-key" id="pix-key-display" style="color:#555;font-size:11px;">Será gerado ao confirmar o pedido...</div>
+        <div class="pix-key" id="pix-key-display"></div>
         <button class="pix-copy-btn" id="pix-copy-btn" onclick="copyPix()">📋 Copiar</button>
       </div>
       <div class="pix-notice">
-        ✅ <strong>PIX automático:</strong> Ao confirmar o pedido, um QR Code único é gerado.<br>
-        Após o pagamento, o pedido é <strong>confirmado automaticamente</strong> — sem precisar enviar comprovante.
+        Escaneie o QR Code ou copie a chave PIX.<br>
+        Após pagar, toque em <strong>Já paguei</strong>.
       </div>
+      <button onclick="jaPaguei()" style="width:100%;background:#25d366;border:none;color:#fff;font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;padding:15px;border-radius:10px;cursor:pointer;margin-top:12px;">
+        ✅ JÁ PAGUEI — ENVIAR PEDIDO
+      </button>
     </div>
     <div class="cart-totals" id="checkout-totals"></div>
+    <button class="finalize-btn" id="finalize-btn" onclick="prepareOrder()">
+      <span>🛒</span> CONFIRMAR PEDIDO
+    </button>
     <button class="close-btn" style="margin-top:6px;" onclick="document.getElementById('checkout-overlay').classList.remove('open')">Voltar</button>
   </div>
 </div>
@@ -974,29 +967,7 @@ let currentOrderId = null;
 let pendingWaUrl = null; // ✅ FIX 1: guarda a URL do comprovante
 
 // ── MERCADO PAGO PIX DINÂMICO ─────────────────────────────
-// Troque pela URL do seu backend quando em produção
-const API_URL = 'https://king-angus-backend-production.up.railway.app';
-
-let pixDinamicoCode    = ''; // código copia e cola dinâmico
-let pixPedidoId        = null; // ID do pedido no backend MP
-let pixPollingInterval = null; // referência do setInterval
-let pixGerado          = false; // evita gerar duas vezes
-let pendingWaMsg       = null;  // mensagem WA montada, enviada após pagamento
-let autoGenTimer       = null;  // debounce do auto-trigger
-
-function tryAutoGenerate(){
-  if(pixGerado) return;
-  clearTimeout(autoGenTimer);
-  autoGenTimer = setTimeout(()=>{
-    const nome  = document.getElementById('f-nome').value.trim();
-    const tel   = document.getElementById('f-tel').value.trim();
-    const cpf   = document.getElementById('f-cpf').value;
-    const end   = orderType==='delivery' ? document.getElementById('f-end').value.trim() : 'ok';
-    if(nome && tel && validarCpf(cpf) && end){
-      prepareOrder();
-    }
-  }, 700);
-}
+let pendingWaMsg = null;
 
 async function saveOrderToFirebase(orderData){
   try {
@@ -1334,15 +1305,13 @@ function openCheckout(){
   if(!cart.length){toast('Carrinho vazio!');return;}
   document.getElementById('cart-overlay').classList.remove('open');
   // Reseta estado do PIX
-  pixGerado = false; pendingWaMsg = null; clearTimeout(autoGenTimer);
-  const qrImg = document.getElementById('pix-qr-img');
-  const qrPh  = document.getElementById('pix-qr-placeholder');
-  if(qrImg){ qrImg.src=''; qrImg.style.display='none'; }
-  if(qrPh)  qrPh.style.display='flex';
-  document.getElementById('pix-ph-icon').textContent='💳';
-  document.getElementById('pix-ph-txt').textContent='Preencha CPF e e-mail para gerar o PIX';
-  document.getElementById('pix-key-display').textContent='Será gerado automaticamente...';
-  document.getElementById('pix-key-display').style.color='#555';
+  pendingWaMsg = null;
+  document.getElementById('pix-box').style.display = 'none';
+  document.getElementById('pix-qr-div').innerHTML = '';
+  document.getElementById('pix-key-display').textContent = '';
+  const btn = document.getElementById('finalize-btn');
+  btn.style.display=''; btn.disabled=false;
+  btn.innerHTML='<span>🛒</span> CONFIRMAR PEDIDO';
   pixDinamicoCode = '';
   if(pixPollingInterval){ clearInterval(pixPollingInterval); pixPollingInterval=null; }
   const showAddr=orderType==='delivery';
@@ -1386,34 +1355,24 @@ function validate(){
   const base=[['f-nome','err-nome'],['f-tel','err-tel']];
   const addrFields=[['f-end','err-end']];
   const fields = orderType==='delivery' ? [...base,...addrFields] : base;
-  ['err-nome','err-tel','err-cpf','err-end'].forEach(id=>{
+  ['err-nome','err-tel','err-end'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.textContent='';
   });
   fields.forEach(([fid,eid])=>{
     const v=document.getElementById(fid).value.trim();
     if(!v){document.getElementById(eid).textContent='Campo obrigatório';ok=false;}
   });
-  // Valida CPF com algoritmo completo
-  if(!validarCpf(document.getElementById('f-cpf').value)){
-    document.getElementById('err-cpf').textContent='CPF inválido';ok=false;
-  }
   return ok;
 }
 
-
-// ═══ Gera PIX automaticamente quando todos os campos estão válidos ═══
 async function prepareOrder(){
-  if(pixGerado) return;
-  pixGerado = true;
+  if(!validate()) return;
 
-  // Mostra spinner no placeholder do QR
-  document.getElementById('pix-ph-icon').textContent = '⏳';
-  document.getElementById('pix-ph-txt').textContent  = 'Gerando seu PIX...';
+  const btn = document.getElementById('finalize-btn');
+  btn.disabled = true; btn.textContent = '⏳ Gerando...';
 
-  const nome  = document.getElementById('f-nome').value.trim();
-  const tel   = document.getElementById('f-tel').value.trim();
-  const cpf   = document.getElementById('f-cpf').value.replace(/\D/g,'');
-  const email = 'pedido@kingangus.com';
+  const nome = document.getElementById('f-nome').value.trim();
+  const tel  = document.getElementById('f-tel').value.trim();
   const end  = orderType==='delivery' ? document.getElementById('f-end').value.trim() : '';
   const ref  = orderType==='delivery' ? document.getElementById('f-ref').value.trim() : '';
   const obs  = document.getElementById('f-obs').value.trim();
@@ -1423,168 +1382,56 @@ async function prepareOrder(){
   const typeEmoji = orderType==='delivery'?'🛵 Delivery':orderType==='retirada'?'🏃 Retirada':'🪑 Balcão';
 
   const orderData = {
-    cliente:nome, tel, end, ref, obs,
-    tipo:orderType,
+    cliente:nome, tel, end, ref, obs, tipo:orderType,
     itens: cart.map(c=>({name:c.name,qty:c.qty,price:c.unitPrice,details:c.details||''})),
     subtotal:sub, taxa:fee, total
   };
-
-  // Salva no Firebase para obter o ID
   let orderId = null;
   try { orderId = await saveOrderToFirebase(orderData); } catch(e){}
 
-  // ── PIX DINÂMICO via Mercado Pago ────────────────────────
-  pixDinamicoCode = PIX_KEY; // fallback: usa chave estática se backend falhar
-  try {
-    const pixRes = await fetch(`${API_URL}/criar-pedido`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        itens: [
-          ...cart.map(c => ({nome:c.name, quantidade:c.qty, preco:c.unitPrice})),
-          ...(fee > 0 ? [{nome:'Taxa de entrega', quantidade:1, preco:fee}] : [])
-        ],
-        cliente: {nome, email, cpf}
-      })
-    });
-    if(pixRes.ok){
-      const pixData = await pixRes.json();
-      pixDinamicoCode = pixData.pix.qr_code;
-      pixPedidoId     = pixData.pedido_id;
-      // Exibe QR Code dinâmico
-      const qrImg = document.getElementById('pix-qr-img');
-      const qrPh  = document.getElementById('pix-qr-placeholder');
-      if(qrImg){
-        qrImg.src = `data:image/png;base64,${pixData.pix.qr_code_base64}`;
-        qrImg.style.display = 'block';
-      }
-      if(qrPh) qrPh.style.display = 'none';
-      const keyEl = document.getElementById('pix-key-display');
-      keyEl.textContent = pixDinamicoCode;
-      keyEl.style.color = '';
-      toast('✅ QR Code PIX gerado!');
-      // Inicia polling: confirma pedido automaticamente após pagamento
-      startPixPolling(pixData.pedido_id, orderId);
-    }
-  } catch(e){
-    console.warn('Backend PIX indisponível, usando chave estática:', e.message);
-    document.getElementById('pix-key-display').textContent = PIX_KEY;
-    document.getElementById('pix-key-display').style.color = '';
-  }
-  // ────────────────────────────────────────────────────────
+  // Gera QR Code estático com a chave PIX
+  const qrDiv = document.getElementById('pix-qr-div');
+  qrDiv.innerHTML = '';
+  new QRCode(qrDiv, {text:PIX_KEY, width:180, height:180, colorDark:'#000', colorLight:'#fff'});
+  document.getElementById('pix-key-display').textContent = PIX_KEY;
+  document.getElementById('pix-box').style.display = 'block';
+  btn.style.display = 'none';
 
-  // Monta mensagem completa com ID
-  let msg = `👑 *NOVO PEDIDO — KING ANGUS* 👑\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  if(orderId) msg += `🔑 *ID do Pedido:* ${orderId}\n`;
-  msg += `📦 *Tipo:* ${typeEmoji}\n`;
-  msg += `👤 *Cliente:* ${nome}\n`;
-  msg += `📞 *Telefone:* ${tel}\n`;
-  if(orderType==='delivery'){
-    msg += `📍 *Endereço:* ${end}\n`;
-    msg += `📌 *Referência:* ${ref}\n`;
-  }
+  // Monta mensagem WA — enviada quando cliente clicar "Já paguei"
+  let msg = `👑 *NOVO PEDIDO — KING ANGUS* 👑\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  if(orderId) msg += `🔑 *ID:* ${orderId}\n`;
+  msg += `📦 *Tipo:* ${typeEmoji}\n👤 *Cliente:* ${nome}\n📞 *Telefone:* ${tel}\n`;
+  if(orderType==='delivery'){ msg += `📍 *Endereço:* ${end}\n`; if(ref) msg += `📌 *Ref:* ${ref}\n`; }
   if(obs) msg += `📝 *Obs:* ${obs}\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `🛒 *ITENS DO PEDIDO:*\n`;
-  cart.forEach(c => {
-    msg += `\n▸ *${c.name}* × ${c.qty} — ${fmt(c.unitPrice*c.qty)}`;
-    if(c.details) msg += `\n   _${c.details}_`;
-  });
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n🛒 *ITENS:*\n`;
+  cart.forEach(c=>{ msg+=`\n▸ *${c.name}* × ${c.qty} — ${fmt(c.unitPrice*c.qty)}`; if(c.details) msg+=`\n   _${c.details}_`; });
   msg += `\n\n━━━━━━━━━━━━━━━━━━━━━\n`;
-  if(orderType==='delivery') msg += `📦 *Taxa de entrega:* ${fmt(fee)}\n`;
-  msg += `💰 *TOTAL GERAL:* *${fmt(total)}*\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `💳 *Pagamento:* PIX\n`;
-  msg += `🔑 *Chave PIX:* ${PIX_KEY}\n`;
-  msg += `✅ _Pagamento PIX confirmado automaticamente!_`;
+  if(fee>0) msg += `📦 *Taxa entrega:* ${fmt(fee)}\n`;
+  msg += `💰 *TOTAL:* *${fmt(total)}*\n━━━━━━━━━━━━━━━━━━━━━\n💳 *Pagamento:* PIX ✅`;
 
-  // Guarda msg e dados para envio automático após pagamento
   pendingWaMsg = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   saveCliente(tel, nome, end, ref);
 }
 
-// ═══ PASSO 2: chamado quando o cliente toca no link do WA ═══
-// O browser já abriu o WA via href do <a> — aqui só fazemos o pós-envio
-function onWaSendClick(){
-  const waLink = document.getElementById('wa-send-link');
-  const orderId    = waLink._orderId;
-  const nome       = waLink._nome;
-  const ot         = waLink._orderType || orderType;
-
-  // Configura tela de tracking
-  if(ot==='retirada'){
-    document.getElementById('ts-entrega-nome').textContent='Pronto para retirada';
-    document.getElementById('ts-entrega-desc').textContent='Seu pedido está te esperando!';
-  } else if(ot==='balcao'){
-    document.getElementById('ts-entrega-nome').textContent='Pronto!';
-    document.getElementById('ts-entrega-desc').textContent='Pegue no balcão';
-  } else {
-    document.getElementById('ts-entrega-nome').textContent='Saiu para entrega';
-    document.getElementById('ts-entrega-desc').textContent='A caminho do seu endereço';
-  }
-  document.getElementById('tracking-sub').textContent=`Olá, ${nome}! Acompanhe em tempo real`;
-  updateComprovanteBtn(orderId);
-
-  // Reseta estado após pequeno delay (deixar o WA abrir primeiro)
-  setTimeout(()=>{
-    cart = [];
-    orderType = 'delivery';
-    const btn = document.getElementById('finalize-btn');
-    btn.disabled = false;
-    btn.innerHTML = '<span>💬</span> GERAR PEDIDO';
-    btn.style.opacity = '1';
-    btn.style.display = '';
-    document.getElementById('wa-ready-box').style.display = 'none';
-    document.getElementById('checkout-overlay').classList.remove('open');
-    document.getElementById('tracking-overlay').classList.add('open');
-    updateTrackingScreen('aguardando');
-    updateCartFloat();
-    if(orderId) watchOrderStatus(orderId);
-  }, 800);
-}
-
-// Mantém finalizeOrder como alias por compatibilidade (não usado mais)
-function finalizeOrder(){ prepareOrder(); }
-
-// ── POLLING DE PAGAMENTO PIX ──────────────────────────────
-// Verifica a cada 5s se o pagamento foi confirmado no Mercado Pago
-function startPixPolling(pixId, firebaseId){
-  if(pixPollingInterval) clearInterval(pixPollingInterval);
-  pixPollingInterval = setInterval(async ()=>{
-    try {
-      const res  = await fetch(`${API_URL}/status-pedido/${pixId}`);
-      const data = await res.json();
-      if(data.status === 'pago'){
-        clearInterval(pixPollingInterval);
-        pixPollingInterval = null;
-        // Atualiza Firebase para 'aceito' — painel do restaurante verá o pedido pago
-        if(firebaseId){
-          fetch(`${FB_URL}/pedidos/${firebaseId}.json`,{
-            method:'PATCH',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({status:'aceito', pagoEm: Date.now()})
-          }).catch(()=>{});
-        }
-        confirmarPagamentoAuto(firebaseId);
-      }
-    } catch(e){ /* ignora falhas de rede temporárias */ }
-  }, 5000);
-}
-
-// Chamado automaticamente quando pagamento PIX é confirmado
-function confirmarPagamentoAuto(firebaseId){
+function jaPaguei(){
   const nome = document.getElementById('f-nome').value.trim();
-
-  // Envia pedido automaticamente para o WhatsApp da loja
   if(pendingWaMsg) window.open(pendingWaMsg, '_blank');
-
-  // Limpa estado
-  cart = [];
-  pixGerado = false;
   pendingWaMsg = null;
-  orderType = 'delivery';
+  cart = []; orderType = 'delivery';
+  document.getElementById('finalize-btn').style.display='';
+  document.getElementById('finalize-btn').disabled=false;
+  document.getElementById('finalize-btn').innerHTML='<span>🛒</span> CONFIRMAR PEDIDO';
+  document.getElementById('pix-box').style.display='none';
   document.getElementById('checkout-overlay').classList.remove('open');
+  document.getElementById('tracking-sub').textContent=`Olá, ${nome}! Acompanhe em tempo real`;
+  document.getElementById('tracking-overlay').classList.add('open');
+  updateTrackingScreen('aguardando');
+  updateCartFloat();
+}
+
+// Mantém para compatibilidade com watchOrderStatus
+function confirmarPagamentoAuto(firebaseId){
+  jaPaguei();
   updateCartFloat();
   // Abre tela de tracking já no status "aceito"
   if(orderType==='retirada'){

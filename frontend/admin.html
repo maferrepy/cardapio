@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King Angus — Avaliações</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#d62828;--gold:#ffd166;--bg:#0a0a0a;--card:#1a1a1a;--border:#2a2a2a;--text:#f0f0f0;--muted:#777;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 28px;width:100%;max-width:360px;text-align:center;}
+.login-box h1{font-family:'Bebas Neue';font-size:32px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;}
+.login-box p{color:var(--muted);font-size:14px;margin-bottom:24px;}
+.login-box input{width:100%;background:#111;border:1.5px solid var(--border);color:var(--text);font-family:'Barlow Condensed';font-size:18px;padding:12px 16px;border-radius:8px;outline:none;margin-bottom:14px;letter-spacing:3px;}
+.login-box input:focus{border-color:var(--red);}
+.login-box button{width:100%;background:var(--red);border:none;color:#fff;font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;padding:13px;border-radius:8px;cursor:pointer;}
+.login-box button:hover{background:#ff3b3b;}
+.login-error{color:#ff6b6b;font-size:13px;margin-top:10px;display:none;}
+
+/* ADMIN */
+#admin-screen{display:none;padding:24px 20px 60px;max-width:960px;margin:0 auto;}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.admin-header h1{font-family:'Bebas Neue';font-size:36px;letter-spacing:2px;}
+.admin-header h1 span{color:var(--gold);}
+.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;text-align:center;}
+.stat-num{font-family:'Bebas Neue';font-size:36px;color:var(--gold);}
+.stat-label{font-size:13px;color:var(--muted);margin-top:2px;}
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{background:transparent;border:1.5px solid var(--border);color:var(--text);font-family:'Barlow Condensed';font-size:15px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;}
+.filter-btn.active{background:var(--red);border-color:var(--red);}
+.review-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px;}
+.review-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.review-stars{display:flex;gap:14px;}
+.star-group{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--muted);}
+.star-group .stars{color:var(--gold);font-size:15px;letter-spacing:1px;}
+.review-date{font-size:12px;color:var(--muted);}
+.review-id{font-size:11px;color:#444;margin-top:4px;}
+.review-comentario{font-size:15px;color:var(--text);background:#111;border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:10px;line-height:1.6;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.logout-btn{background:transparent;border:1.5px solid var(--border);color:var(--muted);font-family:'Barlow Condensed';font-size:14px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:16px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:8px;">👑</div>
+    <h1>KING ANGUS</h1>
+    <p>Área administrativa — Avaliações</p>
+    <input type="password" id="senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()">
+    <button onclick="entrar()">ENTRAR</button>
+    <div class="login-error" id="login-error">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <h1>AVALIAÇÕES <span>KING ANGUS</span></h1>
+    <button class="logout-btn" onclick="sair()">Sair</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total de avaliações</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-lanche">—</div><div class="stat-label">Média lanche ⭐</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-entrega">—</div><div class="stat-label">Média entrega ⭐</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-comentarios">0</div><div class="stat-label">Com comentários</div></div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filtrar('todos',this)">Todas</button>
+    <button class="filter-btn" onclick="filtrar('comentario',this)">Com comentário</button>
+    <button class="filter-btn" onclick="filtrar('5estrelas',this)">⭐ 5 estrelas</button>
+    <button class="filter-btn" onclick="filtrar('baixa',this)">⚠️ Notas baixas</button>
+  </div>
+
+  <div id="reviews-list"><div class="loading">Carregando avaliações...</div></div>
+</div>
+
+<script>
+const FB_URL  = 'https://king-angus-default-rtdb.firebaseio.com';
+const SENHA   = 'kingangus2024';
+let todasAvaliacoes = [];
+let filtroAtivo = 'todos';
+
+function entrar(){
+  const v = document.getElementById('senha-input').value;
+  if(v === SENHA){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    carregarAvaliacoes();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('senha-input').value = '';
+  }
+}
+
+function sair(){
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('senha-input').value = '';
+}
+
+async function carregarAvaliacoes(){
+  try {
+    const res  = await fetch(`${FB_URL}/avaliacoes.json?orderBy="timestamp"&limitToLast=200`);
+    const data = await res.json();
+    if(!data){ renderVazio(); return; }
+    todasAvaliacoes = Object.entries(data)
+      .map(([id, v]) => ({id, ...v}))
+      .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+    calcStats();
+    renderAvaliacoes(todasAvaliacoes);
+  } catch(e){
+    document.getElementById('reviews-list').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar. Verifique as regras do Firebase.</p></div>`;
+  }
+}
+
+function calcStats(){
+  const n = todasAvaliacoes.length;
+  document.getElementById('stat-total').textContent = n;
+  if(n === 0) return;
+  const ml = (todasAvaliacoes.reduce((s,a)=>s+(a.lanche||0),0)/n).toFixed(1);
+  const me = (todasAvaliacoes.reduce((s,a)=>s+(a.entrega||0),0)/n).toFixed(1);
+  const mc = todasAvaliacoes.filter(a=>a.comentario && a.comentario.trim()).length;
+  document.getElementById('stat-lanche').textContent   = ml;
+  document.getElementById('stat-entrega').textContent  = me;
+  document.getElementById('stat-comentarios').textContent = mc;
+}
+
+function filtrar(tipo, btn){
+  filtroAtivo = tipo;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let lista = [...todasAvaliacoes];
+  if(tipo === 'comentario') lista = lista.filter(a=>a.comentario && a.comentario.trim());
+  if(tipo === '5estrelas')  lista = lista.filter(a=>a.lanche===5 && a.entrega===5);
+  if(tipo === 'baixa')      lista = lista.filter(a=>a.lanche<=2 || a.entrega<=2);
+  renderAvaliacoes(lista);
+}
+
+function estrelas(n){ return '★'.repeat(n||0)+'☆'.repeat(5-(n||0)); }
+
+function renderAvaliacoes(lista){
+  const el = document.getElementById('reviews-list');
+  if(!lista.length){ renderVazio(); return; }
+  el.innerHTML = lista.map(a=>`
+    <div class="review-card">
+      <div class="review-top">
+        <div class="review-stars">
+          <div class="star-group">🍔 <span class="stars">${estrelas(a.lanche)}</span> ${a.lanche||0}/5</div>
+          <div class="star-group">🛵 <span class="stars">${estrelas(a.entrega)}</span> ${a.entrega||0}/5</div>
+        </div>
+        <div style="text-align:right">
+          <div class="review-date">${a.data || '—'}</div>
+          ${a.pedido_id ? `<div class="review-id">ID: ${a.pedido_id.slice(0,12)}...</div>` : ''}
+        </div>
+      </div>
+      ${a.comentario && a.comentario.trim()
+        ? `<div class="review-comentario">"${a.comentario}"</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderVazio(){
+  document.getElementById('reviews-list').innerHTML =
+    `<div class="empty"><div class="empty-icon">📭</div><p>Nenhuma avaliação ainda.</p></div>`;
+}
+</script>
+</body>
+</html>

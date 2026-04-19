@@ -924,7 +924,17 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       </div>
     </div>
 
-    <button id="submit-rating-btn" onclick="submitRating()" style="margin-top:24px;width:100%;background:var(--red);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;padding:15px;cursor:pointer;opacity:.4;" disabled>
+    <div class="rating-section" style="margin-top:8px;">
+      <div class="rating-label">💬 Deixe um comentário (opcional)</div>
+      <textarea id="rating-comentario" placeholder="Conte como foi sua experiência..." style="
+        width:100%;margin-top:8px;background:#1a1a1a;border:1.5px solid var(--border);
+        border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;
+        font-size:15px;padding:12px 14px;resize:none;height:80px;outline:none;
+        transition:border-color .2s;
+      " onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+
+    <button id="submit-rating-btn" onclick="submitRating()" style="margin-top:16px;width:100%;background:var(--red);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;padding:15px;cursor:pointer;opacity:.4;" disabled>
       ENVIAR AVALIAÇÃO
     </button>
     <button class="tracking-new-order" style="margin-top:12px;" onclick="skipRating()">Pular avaliação</button>
@@ -1753,6 +1763,7 @@ async function confirmDelivery(){
     ['lanche','entrega'].forEach(t=>{
       document.getElementById('stars-'+t).querySelectorAll('.star').forEach(s=>s.classList.remove('active'));
     });
+    document.getElementById('rating-comentario').value = '';
     const btn = document.getElementById('submit-rating-btn');
     btn.disabled = true; btn.style.opacity = '.4';
     document.getElementById('rating-overlay').classList.add('open');
@@ -1773,20 +1784,38 @@ function setRating(type, val){
 }
 
 async function submitRating(){
+  const comentario = document.getElementById('rating-comentario').value.trim();
+  const payload = {
+    avaliacao_lanche:  ratingData.lanche,
+    avaliacao_entrega: ratingData.entrega,
+    comentario:        comentario || '',
+    avaliado_em:       Date.now()
+  };
   if(currentOrderId){
     try {
+      // Salva no pedido
       await fetch(`${FB_URL}/pedidos/${currentOrderId}.json`,{
-        method:'PATCH',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          avaliacao_lanche: ratingData.lanche,
-          avaliacao_entrega: ratingData.entrega,
-          avaliado_em: Date.now()
-        })
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
       });
     } catch(e){}
   }
+  // Salva também em /avaliacoes para consulta fácil
+  try {
+    await fetch(`${FB_URL}/avaliacoes.json`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        pedido_id:         currentOrderId || '',
+        lanche:            ratingData.lanche,
+        entrega:           ratingData.entrega,
+        comentario:        comentario || '',
+        data:              new Date().toLocaleString('pt-BR'),
+        timestamp:         Date.now()
+      })
+    });
+  } catch(e){}
   document.getElementById('rating-overlay').classList.remove('open');
+  document.getElementById('rating-comentario').value = '';
   toast('Obrigado pela avaliação! 🌟', 3000);
   setTimeout(()=>newOrder(), 600);
 }

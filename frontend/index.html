@@ -959,8 +959,10 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
 
 <script>
 // ═══ CONFIG ═══════════════════════════════════════════
-const WA_NUMBER = '554199593-9841';
-const PIX_KEY   = '4073f74a-db6f-4b7d-acea-6c39f270478f';
+const WA_NUMBER    = '554199593-9841';
+const PIX_CHAVE    = 'marcosferreira123@hotmail.com';
+const PIX_NOME     = 'KINGANGUSBURGER';
+const PIX_CIDADE   = 'FAZENDARIOGRAND'; // max 15 chars
 const DELIVERY_FEE = 5.00;
 const FB_URL = 'https://king-angus-default-rtdb.firebaseio.com';
 let currentOrderId = null;
@@ -968,6 +970,29 @@ let pendingWaUrl = null; // ✅ FIX 1: guarda a URL do comprovante
 
 // ── MERCADO PAGO PIX DINÂMICO ─────────────────────────────
 let pendingWaMsg = null;
+
+// ── PIX BR Code (Banco Central) ───────────────────────────
+function calcCRC16(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function gerarPixBRCode(chave, nome, cidade, valor) {
+  const f = (id, v) => `${id}${String(v.length).padStart(2,'0')}${v}`;
+  const mai  = f('26', f('00','BR.GOV.BCB.PIX') + f('01', chave));
+  const adft = f('62', f('05','***'));
+  let p = f('00','01') + mai + f('52','0000') + f('53','986');
+  if (valor > 0) p += f('54', valor.toFixed(2));
+  p += f('58','BR') + f('59', nome.substring(0,25)) + f('60', cidade.substring(0,15)) + adft + '6304';
+  return p + calcCRC16(p);
+}
 
 async function saveOrderToFirebase(orderData){
   try {
@@ -1321,7 +1346,7 @@ function openCheckout(){
 }
 
 function copyPix(){
-  const code = pixDinamicoCode || PIX_KEY;
+  const code = document.getElementById('pix-key-display').textContent;
   navigator.clipboard.writeText(code).then(()=>{
     const btn=document.getElementById('pix-copy-btn');
     btn.textContent='Copiado ✓';btn.classList.add('copied');
@@ -1389,11 +1414,12 @@ async function prepareOrder(){
   let orderId = null;
   try { orderId = await saveOrderToFirebase(orderData); } catch(e){}
 
-  // Gera QR Code estático com a chave PIX
+  // Gera BR Code com valor dinâmico do pedido
+  const brCode = gerarPixBRCode(PIX_CHAVE, PIX_NOME, PIX_CIDADE, total);
   const qrDiv = document.getElementById('pix-qr-div');
   qrDiv.innerHTML = '';
-  new QRCode(qrDiv, {text:PIX_KEY, width:180, height:180, colorDark:'#000', colorLight:'#fff'});
-  document.getElementById('pix-key-display').textContent = PIX_KEY;
+  new QRCode(qrDiv, {text:brCode, width:180, height:180, colorDark:'#000', colorLight:'#fff'});
+  document.getElementById('pix-key-display').textContent = brCode;
   document.getElementById('pix-box').style.display = 'block';
   btn.style.display = 'none';
 
@@ -1712,7 +1738,6 @@ function confirmRefri(){
 }
 
 // ═══ INIT ══════════════════════════════════════════════
-document.getElementById('pix-key-display').textContent = PIX_KEY;
 updateComprovanteBtn(null);
 </script>
 </body>

@@ -1337,8 +1337,6 @@ function openCheckout(){
   const btn = document.getElementById('finalize-btn');
   btn.style.display=''; btn.disabled=false;
   btn.innerHTML='<span>🛒</span> CONFIRMAR PEDIDO';
-  pixDinamicoCode = '';
-  if(pixPollingInterval){ clearInterval(pixPollingInterval); pixPollingInterval=null; }
   const showAddr=orderType==='delivery';
   document.getElementById('delivery-fields').style.display=showAddr?'block':'none';
   renderCartTotals('checkout-totals');

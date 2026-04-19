@@ -1086,10 +1086,9 @@ const PIX_CIDADE   = 'FAZENDARIOGRAND'; // max 15 chars
 const DELIVERY_FEE = 5.00;
 const FB_URL = 'https://king-angus-default-rtdb.firebaseio.com';
 let currentOrderId = null;
-let pendingWaUrl = null; // ✅ FIX 1: guarda a URL do comprovante
-
-// ── MERCADO PAGO PIX DINÂMICO ─────────────────────────────
+let pendingWaUrl = null;
 let pendingWaMsg = null;
+let pendingOrderId = null; // Firebase ID do pedido em curso
 
 // ── PIX BR Code (Banco Central) ───────────────────────────
 function calcCRC16(str) {
@@ -1531,6 +1530,7 @@ async function prepareOrder(){
   };
   let orderId = null;
   try { orderId = await saveOrderToFirebase(orderData); } catch(e){}
+  pendingOrderId = orderId;
 
   // Gera BR Code com valor dinâmico do pedido
   const brCode = gerarPixBRCode(PIX_CHAVE, PIX_NOME, PIX_CIDADE, total);
@@ -1571,6 +1571,20 @@ function jaPaguei(){
   document.getElementById('tracking-overlay').classList.add('open');
   updateTrackingScreen('aguardando');
   updateCartFloat();
+
+  // Salva pedido ativo no localStorage para restaurar se o cliente sair e voltar
+  const oid = pendingOrderId;
+  pendingOrderId = null;
+  if(oid){
+    currentOrderId = oid;
+    updateComprovanteBtn(oid, nome);
+    watchOrderStatus(oid);
+  }
+  try {
+    localStorage.setItem('ka_active_order', JSON.stringify({
+      orderId: oid, nome, status:'aguardando', savedAt: Date.now()
+    }));
+  } catch(e){}
 }
 
 // Mantém para compatibilidade com watchOrderStatus
@@ -1613,6 +1627,11 @@ async function watchOrderStatus(orderId){
         lastStatus = data.status;
         updateTrackingScreen(data.status);
         flashStatusChange();
+        // Atualiza status no localStorage
+        try {
+          const raw = localStorage.getItem('ka_active_order');
+          if(raw){ const o=JSON.parse(raw); o.status=data.status; localStorage.setItem('ka_active_order',JSON.stringify(o)); }
+        } catch(e){}
       }
 
       if(data.status === 'entregue') clearInterval(interval);
@@ -1780,6 +1799,7 @@ function newOrder(){
   document.getElementById('tracking-overlay').classList.remove('open');
   document.getElementById('rating-overlay').classList.remove('open');
   currentOrderId = null;
+  try { localStorage.removeItem('ka_active_order'); } catch(e){}
   updateCartFloat();
 }
 
@@ -1857,6 +1877,29 @@ function confirmRefri(){
 
 // ═══ INIT ══════════════════════════════════════════════
 updateComprovanteBtn(null);
+
+// Restaura tela de acompanhamento se o cliente saiu e voltou
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const raw = localStorage.getItem('ka_active_order');
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    // Expira após 2 horas
+    if(!saved || Date.now() - saved.savedAt > 2 * 60 * 60 * 1000){
+      localStorage.removeItem('ka_active_order'); return;
+    }
+    // Restaura a tela
+    const el = document.getElementById('tracking-sub');
+    if(el) el.textContent = `Olá, ${saved.nome}! Acompanhe em tempo real`;
+    document.getElementById('tracking-overlay').classList.add('open');
+    updateTrackingScreen(saved.status || 'aguardando');
+    if(saved.orderId){
+      currentOrderId = saved.orderId;
+      updateComprovanteBtn(saved.orderId, saved.nome);
+      watchOrderStatus(saved.orderId);
+    }
+  } catch(e){}
+});
 </script>
 </body>
 </html>

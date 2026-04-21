@@ -7,7 +7,12 @@
       "Bash(git rm:*)",
       "Bash(cp /c/Users/Gamer/Desktop/hamburgueria-pix/frontend/index.html /c/Users/Gamer/Desktop/hamburgueria-pix/index.html)",
       "Bash(cp -r /c/Users/Gamer/Desktop/hamburgueria-pix/frontend/img /c/Users/Gamer/Desktop/hamburgueria-pix/img)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(mv \"king angus.png\" \"king-angus.png\")",
+      "Bash(mv \"Angus Supremo.png\" \"angus-supremo.png\")",
+      "Bash(mv \"AngusBacon.png\" \"angus-bacon.png\")",
+      "Bash(mv \"classic cheese.png\" \"classic-cheese.png\")",
+      "Bash(mv \"Combosupremo.png\" \"combo-supremo.png\")"
     ]
   }
 }

@@ -637,7 +637,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
     <!-- ANGUS SUPREMO — com foto real -->
     <div class="item-card-img">
       <div class="item-img-wrap">
-        <img src="img/supremo.png" alt="Angus Supremo">
+        <img src="img/angus-supremo.png" alt="Angus Supremo">
         <div class="item-img-overlay"></div>
         <div class="item-img-badges">
           <span class="tag tag-hot" style="font-size:11px;padding:4px 10px;">🔥 MAIS PEDIDO</span>
@@ -658,7 +658,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
     <!-- ANGUS BACON — com foto real -->
     <div class="item-card-img">
       <div class="item-img-wrap">
-        <img src="img/bacon.png" alt="Angus Bacon">
+        <img src="img/angus-bacon.png" alt="Angus Bacon">
         <div class="item-img-overlay"></div>
         <div class="item-img-price">
           <div class="price-main">R$ 26,99</div>
@@ -703,7 +703,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
 
     <div class="item-card-img">
       <div class="item-img-wrap">
-        <img src="img/combo.png" alt="Combo Angus Supremo">
+        <img src="img/combo-supremo.png" alt="Combo Angus Supremo">
         <div class="item-img-overlay"></div>
         <div class="item-img-price">
           <div class="price-main">R$ 36,99</div>
@@ -717,31 +717,52 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       </div>
     </div>
 
-    <div class="item-card">
-      <div class="item-top">
-        <div class="item-name">Combo Angus Bacon</div>
-        <div class="item-price-wrap"><div class="item-price">R$ 39,99</div></div>
+    <div class="item-card-img">
+      <div class="item-img-wrap">
+        <img src="img/combo-bacon.png" alt="Combo Angus Bacon">
+        <div class="item-img-overlay"></div>
+        <div class="item-img-price">
+          <div class="price-main">R$ 39,99</div>
+        </div>
       </div>
-      <div class="item-desc">Burger + batata frita + refrigerante</div>
-      <button class="add-btn" onclick="openCombo('Combo Angus Bacon',39.99)">+ Adicionar</button>
+      <div class="item-img-body">
+        <div class="item-img-name">Combo Angus Bacon</div>
+        <div class="item-img-desc">Burger + batata frita + refrigerante</div>
+        <div class="item-img-separator"></div>
+        <button class="add-btn" style="margin-top:0" onclick="openCombo('Combo Angus Bacon',39.99)">+ Adicionar</button>
+      </div>
     </div>
 
-    <div class="item-card">
-      <div class="item-top">
-        <div class="item-name">🔥 Combo Monstro</div>
-        <div class="item-price-wrap"><div class="item-price">R$ 44,99</div></div>
+    <div class="item-card-img">
+      <div class="item-img-wrap">
+        <img src="img/combo-mostro.png" alt="Combo Monstro">
+        <div class="item-img-overlay"></div>
+        <div class="item-img-price">
+          <div class="price-main">R$ 44,99</div>
+        </div>
       </div>
-      <div class="item-desc">Burger duplo + cheddar extra + bacon · Batata + refrigerante</div>
-      <button class="add-btn" onclick="openCombo('Combo Monstro',44.99)">+ Adicionar</button>
+      <div class="item-img-body">
+        <div class="item-img-name">🔥 Combo Monstro</div>
+        <div class="item-img-desc">Burger duplo + cheddar extra + bacon · Batata + refrigerante</div>
+        <div class="item-img-separator"></div>
+        <button class="add-btn" style="margin-top:0" onclick="openCombo('Combo Monstro',44.99)">+ Adicionar</button>
+      </div>
     </div>
 
-    <div class="item-card">
-      <div class="item-top">
-        <div class="item-name">🧀 Combo Classic Cheese</div>
-        <div class="item-price-wrap"><div class="item-price">R$ 29,90</div></div>
+    <div class="item-card-img">
+      <div class="item-img-wrap">
+        <img src="img/combo-classic-cheese.png" alt="Combo Classic Cheese">
+        <div class="item-img-overlay"></div>
+        <div class="item-img-price">
+          <div class="price-main">R$ 29,90</div>
+        </div>
       </div>
-      <div class="item-desc">Burger + batata frita + refrigerante</div>
-      <button class="add-btn" onclick="openCombo('Combo Classic Cheese',29.90)">+ Adicionar</button>
+      <div class="item-img-body">
+        <div class="item-img-name">🧀 Combo Classic Cheese</div>
+        <div class="item-img-desc">Burger + batata frita + refrigerante</div>
+        <div class="item-img-separator"></div>
+        <button class="add-btn" style="margin-top:0" onclick="openCombo('Combo Classic Cheese',29.90)">+ Adicionar</button>
+      </div>
     </div>
   </div>
 
@@ -780,18 +801,42 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
   <!-- BEBIDAS -->
   <div class="section" id="sec-bebidas">
     <div class="section-header-v2"><span class="section-icon-v2">🥤</span><span class="section-title-v2">Bebidas</span><span class="section-count">3 opções</span></div>
-    <div class="item-card">
-      <div class="item-top"><div class="item-name">🥤 Refrigerante lata</div><div class="item-price-wrap"><div class="item-price">R$ 4,99</div></div></div>
-      <div class="item-desc">Coca-Cola · Guaraná Antarctica · Fanta Laranja · Fanta Uva · Sprite · Schweppes</div>
-      <button class="add-btn" onclick="openRefrigerante()">+ Adicionar</button>
+
+    <div class="item-card-img">
+      <div class="item-img-wrap">
+        <img src="img/refrigerante.png" alt="Refrigerante">
+        <div class="item-img-overlay"></div>
+        <div class="item-img-price">
+          <div class="price-main">R$ 4,99</div>
+        </div>
+      </div>
+      <div class="item-img-body">
+        <div class="item-img-name">🥤 Refrigerante lata</div>
+        <div class="item-img-desc">Coca-Cola · Guaraná · Fanta Laranja · Fanta Uva · Sprite · Schweppes</div>
+        <div class="item-img-separator"></div>
+        <button class="add-btn" style="margin-top:0" onclick="openRefrigerante()">+ Adicionar</button>
+      </div>
     </div>
+
+    <div class="item-card-img">
+      <div class="item-img-wrap">
+        <img src="img/chopp.png" alt="Chopp">
+        <div class="item-img-overlay"></div>
+        <div class="item-img-price">
+          <div class="price-main">R$ 14,99</div>
+        </div>
+      </div>
+      <div class="item-img-body">
+        <div class="item-img-name">🍺 Chopp 500ml</div>
+        <div class="item-img-desc">Chopp gelado · Servido na hora</div>
+        <div class="item-img-separator"></div>
+        <button class="add-btn" style="margin-top:0" onclick="addSimple('Chopp 500ml',14.99)">+ Adicionar</button>
+      </div>
+    </div>
+
     <div class="item-card simple">
       <div class="item-top"><div class="item-name">Água / Água com gás</div><div class="item-price-wrap"><div class="item-price">R$ 3,99</div></div></div>
       <button class="add-btn" onclick="addSimple('Água',3.99)">+ Adicionar</button>
-    </div>
-    <div class="item-card simple">
-      <div class="item-top"><div class="item-name">🍺 Chopp 500ml</div><div class="item-price-wrap"><div class="item-price">R$ 14,99</div></div></div>
-      <button class="add-btn" onclick="addSimple('Chopp 500ml',14.99)">+ Adicionar</button>
     </div>
   </div>
 

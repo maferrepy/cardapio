@@ -1022,6 +1022,10 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <div class="opt-grid" id="opt-duplo"></div>
     </div>
     <div class="opt-section">
+      <div class="opt-label" id="opt-sache-label">🧴 Quer sachê? <span id="sache-obrig" style="color:var(--red);font-size:11px;margin-left:4px;">* obrigatório</span></div>
+      <div class="opt-grid" id="opt-sache"></div>
+    </div>
+    <div class="opt-section">
       <div class="opt-label">➕ Extras (pagos)</div>
       <div class="opt-grid" id="opt-extras"></div>
     </div>
@@ -1277,11 +1281,12 @@ function outsideClose(e,id){
 
 function openCustomize(key){
   const b = BURGERS[key];
-  sheetState = {key,base:b.price,doublePrice:b.doublePrice,extras:[],remove:[],ponto:PONTOS[0],queijo:QUEIJOS[0],isDouble:false,qty:1};
+  sheetState = {key,base:b.price,doublePrice:b.doublePrice,extras:[],remove:[],ponto:PONTOS[0],queijo:QUEIJOS[0],isDouble:false,sache:null,qty:1};
   document.getElementById('cs-title').textContent = b.name;
   document.getElementById('cs-price').textContent = fmt(b.price);
   document.getElementById('cs-desc').textContent = b.desc;
   document.getElementById('sheet-qty').textContent = '1';
+  document.getElementById('sache-obrig').style.display='inline';
   buildChips('opt-ponto',PONTOS,null,v=>{sheetState.ponto=v;updateAddBtn();});
   selectChip('opt-ponto',PONTOS[0]);
   buildChips('opt-queijo',QUEIJOS,null,v=>{sheetState.queijo=v;updateAddBtn();});
@@ -1304,6 +1309,23 @@ function openCustomize(key){
     };
     dWrap.appendChild(chip);
   });
+  // Sachê — obrigatório
+  const sWrap=document.getElementById('opt-sache');
+  sWrap.innerHTML='';
+  ['Sim','Não'].forEach(op=>{
+    const chip=document.createElement('div');
+    chip.className='opt-chip';
+    chip.textContent=op;
+    chip.onclick=()=>{
+      sheetState.sache=op;
+      sWrap.querySelectorAll('.opt-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      document.getElementById('sache-obrig').style.display='none';
+      updateAddBtn();
+    };
+    sWrap.appendChild(chip);
+  });
+
   const eWrap=document.getElementById('opt-extras');
   eWrap.innerHTML='';
   EXTRAS.forEach(ex=>{
@@ -1364,7 +1386,16 @@ function getSheetPrice(){
 }
 
 function updateAddBtn(){
-  document.getElementById('add-btn-price').textContent = fmt(getSheetPrice());
+  const btn = document.getElementById('add-to-cart-btn');
+  const price = fmt(getSheetPrice());
+  document.getElementById('add-btn-price').textContent = price;
+  if(sheetState.sache === null){
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
 }
 
 function changeSheetQty(v){
@@ -1379,6 +1410,7 @@ function confirmAddToCart(){
   details.push(`Ponto: ${sheetState.ponto}`);
   details.push(`Queijo: ${sheetState.queijo}`);
   if(sheetState.isDouble) details.push(BURGERS[sheetState.key].triploLabel ? '🔥 TRIPLO' : '🔥 DUPLO');
+  details.push(`Sachê: ${sheetState.sache}`);
   if(sheetState.extras.length) details.push('Extras: '+sheetState.extras.map(e=>e.name).join(', '));
   if(sheetState.remove.length) details.push('Sem: '+sheetState.remove.join(', '));
   const unitPrice = sheetState.isDouble ? sheetState.doublePrice : sheetState.base;

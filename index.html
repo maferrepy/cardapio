@@ -1018,7 +1018,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
       <div class="opt-grid" id="opt-queijo"></div>
     </div>
     <div class="opt-section" id="opt-duplo-sec">
-      <div class="opt-label">🔥 Tornar Duplo?</div>
+      <div class="opt-label" id="opt-duplo-label">🔥 Tornar Duplo?</div>
       <div class="opt-grid" id="opt-duplo"></div>
     </div>
     <div class="opt-section">
@@ -1219,22 +1219,22 @@ function enviarComprovante(e){
 // ═══ MENU DATA ════════════════════════════════════════
 const BURGERS = {
   'king-angus':{
-    name:'👑 King Angus',price:34.99,doublePrice:44.99,
+    name:'👑 King Angus',price:34.99,doublePrice:39.99,triploLabel:true,
     desc:'Pão brioche · Hambúrguer Angus de picanha · Queijo mussarela ou cheddar · Picles · Bacon crocante · Cebola caramelizada · Molho da casa',
     removable:['Picles','Bacon','Cebola caramelizada','Molho da casa','Queijo']
   },
   'angus-supremo':{
-    name:'🔥 Angus Supremo',price:23.90,doublePrice:32.99,
+    name:'🔥 Angus Supremo',price:23.90,doublePrice:28.90,
     desc:'Pão brioche · Hambúrguer Angus · Queijo  mussarela ou cheddar · Cebola roxa · Tomate · Alface · Molho King',
     removable:['Cebola roxa','Tomate','Alface','Molho King','Queijo']
   },
   'angus-bacon':{
-    name:'🥓 Angus Bacon',price:26.99,doublePrice:29.99,
+    name:'🥓 Angus Bacon',price:26.99,doublePrice:31.99,
     desc:'Pão brioche · Hambúrguer Angus · Queijo  mussarela ou cheddar · Bacon crocante · Picles · Molho King',
     removable:['Bacon','Picles','Molho King','Queijo']
   },
   'classic-cheese':{
-    name:'🧀 Classic Cheese',price:18.99,doublePrice:24.99,
+    name:'🧀 Classic Cheese',price:17.99,doublePrice:22.99,
     desc:'Pão brioche · Hambúrguer Angus · Queijo  mussarela ou cheddar',
     removable:['Queijo']
   }
@@ -1286,7 +1286,10 @@ function openCustomize(key){
   selectChip('opt-ponto',PONTOS[0]);
   buildChips('opt-queijo',QUEIJOS,null,v=>{sheetState.queijo=v;updateAddBtn();});
   selectChip('opt-queijo',QUEIJOS[0]);
-  const dOpts=[{label:'Não',val:false},{label:`Sim (+${fmt(b.doublePrice - b.price)})`,val:true}];
+  // Label dinâmico: King Angus → Triplo, demais → Duplo
+  const isKing = b.triploLabel === true;
+  document.getElementById('opt-duplo-label').textContent = isKing ? '🔥 Tornar Triplo?' : '🔥 Tornar Duplo?';
+  const dOpts=[{label:'Não',val:false},{label:'Sim (+R$ 5,00)',val:true}];
   const dWrap=document.getElementById('opt-duplo');
   dWrap.innerHTML='';
   dOpts.forEach(o=>{
@@ -1375,7 +1378,7 @@ function confirmAddToCart(){
   const details = [];
   details.push(`Ponto: ${sheetState.ponto}`);
   details.push(`Queijo: ${sheetState.queijo}`);
-  if(sheetState.isDouble) details.push('🔥 DUPLO');
+  if(sheetState.isDouble) details.push(BURGERS[sheetState.key].triploLabel ? '🔥 TRIPLO' : '🔥 DUPLO');
   if(sheetState.extras.length) details.push('Extras: '+sheetState.extras.map(e=>e.name).join(', '));
   if(sheetState.remove.length) details.push('Sem: '+sheetState.remove.join(', '));
   const unitPrice = sheetState.isDouble ? sheetState.doublePrice : sheetState.base;

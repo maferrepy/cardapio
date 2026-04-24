@@ -807,7 +807,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
         <img src="img/refrigerante.png" alt="Refrigerante">
         <div class="item-img-overlay"></div>
         <div class="item-img-price">
-          <div class="price-main">R$ 4,99</div>
+          <div class="price-main">R$ 5,99</div>
         </div>
       </div>
       <div class="item-img-body">
@@ -856,13 +856,17 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
   <div class="sheet">
     <div class="sheet-handle"></div>
     <h2 id="refri-title">🥤 Refrigerante Lata</h2>
-    <div class="sheet-price" id="refri-price">R$ 4,99</div>
+    <div class="sheet-price" id="refri-price">R$ 5,99</div>
     <div id="refri-combo-info" style="display:none;font-size:13px;color:var(--muted);margin-bottom:14px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.2);border-radius:8px;padding:10px 12px;">
       🍟 Inclui batata frita · Escolha o sabor do refrigerante do combo
     </div>
     <div class="opt-section">
       <div class="opt-label">🥤 Sabor do Refrigerante</div>
       <div class="opt-grid" id="refri-flavors"></div>
+    </div>
+    <div class="opt-section" id="refri-upgrade-sec" style="display:none;">
+      <div class="opt-label">⬆️ Upgrade do Refrigerante</div>
+      <div class="opt-grid" id="refri-upgrade"></div>
     </div>
     <div class="qty-row" id="refri-qty-row">
       <div class="opt-label" style="margin:0">Qtd:</div>
@@ -1929,25 +1933,45 @@ function newOrder(){
 
 // ═══ REFRIGERANTE ════════════════════════════════════
 const REFRI_FLAVORS = ['🍎 Coca-Cola','🟡 Guaraná Antarctica','🟠 Fanta Laranja','🟣 Fanta Uva','🍋 Sprite','🫧 Schweppes'];
-let refriState = {flavor:null, qty:1, isCombo:false, comboName:'', comboPrice:0};
+const REFRI_PRECO = 5.99;
+const UPGRADE_600_PRECO = 3.99;
+let refriState = {flavor:null, qty:1, isCombo:false, comboName:'', comboPrice:0, upgrade:false};
 
 function openRefrigerante(){
-  refriState = {flavor:null, qty:1, isCombo:false, comboName:'', comboPrice:0};
+  refriState = {flavor:null, qty:1, isCombo:false, comboName:'', comboPrice:0, upgrade:false};
   document.getElementById('refri-title').textContent = '🥤 Refrigerante Lata';
-  document.getElementById('refri-price').textContent = 'R$ 4,99';
+  document.getElementById('refri-price').textContent = fmt(REFRI_PRECO);
   document.getElementById('refri-combo-info').style.display = 'none';
+  document.getElementById('refri-upgrade-sec').style.display = 'none';
   document.getElementById('refri-qty-row').style.display = 'flex';
   document.getElementById('refri-qty').textContent = '1';
-  _buildRefriChips(4.99);
+  _buildRefriChips(REFRI_PRECO);
   document.getElementById('refri-overlay').classList.add('open');
 }
 
 function openCombo(name, price){
-  refriState = {flavor:null, qty:1, isCombo:true, comboName:name, comboPrice:price};
+  refriState = {flavor:null, qty:1, isCombo:true, comboName:name, comboPrice:price, upgrade:false};
   document.getElementById('refri-title').textContent = name;
   document.getElementById('refri-price').textContent = fmt(price);
   document.getElementById('refri-combo-info').style.display = 'block';
   document.getElementById('refri-qty-row').style.display = 'none';
+  // Monta upgrade chips
+  const uSec = document.getElementById('refri-upgrade-sec');
+  const uWrap = document.getElementById('refri-upgrade');
+  uSec.style.display = 'block';
+  uWrap.innerHTML = '';
+  [{label:'Não', val:false},{label:`Sim, 600ml (+${fmt(UPGRADE_600_PRECO)})`, val:true}].forEach(o=>{
+    const chip = document.createElement('div');
+    chip.className = 'opt-chip' + (o.val===false ? ' selected' : '');
+    chip.textContent = o.label;
+    chip.onclick = ()=>{
+      refriState.upgrade = o.val;
+      uWrap.querySelectorAll('.opt-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      _updateRefriBtn();
+    };
+    uWrap.appendChild(chip);
+  });
   _buildRefriChips(price);
   document.getElementById('refri-overlay').classList.add('open');
 }
@@ -1967,32 +1991,42 @@ function _buildRefriChips(price){
       wrap.querySelectorAll('.opt-chip').forEach(c=>c.classList.remove('selected'));
       chip.classList.add('selected');
       refriState.flavor = f;
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      const total = refriState.isCombo ? price : price * refriState.qty;
-      btn.innerHTML = `<span>ADICIONAR AO CARRINHO</span><span>${fmt(total)}</span>`;
+      _updateRefriBtn();
     };
     wrap.appendChild(chip);
   });
+}
+
+function _updateRefriBtn(){
+  if(!refriState.flavor) return;
+  const btn = document.getElementById('refri-add-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  let total;
+  if(refriState.isCombo){
+    total = refriState.comboPrice + (refriState.upgrade ? UPGRADE_600_PRECO : 0);
+  } else {
+    total = REFRI_PRECO * refriState.qty;
+  }
+  btn.innerHTML = `<span>ADICIONAR AO CARRINHO</span><span>${fmt(total)}</span>`;
 }
 
 function changeRefriQty(v){
   if(refriState.isCombo) return;
   refriState.qty = Math.max(1, refriState.qty + v);
   document.getElementById('refri-qty').textContent = refriState.qty;
-  if(refriState.flavor){
-    const btn = document.getElementById('refri-add-btn');
-    btn.innerHTML = `<span>ADICIONAR AO CARRINHO</span><span>${fmt(4.99 * refriState.qty)}</span>`;
-  }
+  _updateRefriBtn();
 }
 
 function confirmRefri(){
   if(!refriState.flavor) return;
   if(refriState.isCombo){
-    cart.push({id:Date.now(),name:refriState.comboName,unitPrice:refriState.comboPrice,qty:1,details:`🥤 Refri: ${refriState.flavor}`});
+    const upgradeLabel = refriState.upgrade ? ' · 🆙 600ml' : '';
+    const unitPrice = refriState.comboPrice + (refriState.upgrade ? UPGRADE_600_PRECO : 0);
+    cart.push({id:Date.now(),name:refriState.comboName,unitPrice,qty:1,details:`🥤 Refri: ${refriState.flavor}${upgradeLabel}`});
     toast(`${refriState.comboName} adicionado! 🎉`);
   } else {
-    cart.push({id:Date.now(),name:'🥤 Refrigerante — '+refriState.flavor,unitPrice:4.99,qty:refriState.qty,details:''});
+    cart.push({id:Date.now(),name:'🥤 Refrigerante — '+refriState.flavor,unitPrice:REFRI_PRECO,qty:refriState.qty,details:''});
     toast(refriState.flavor+' adicionado! 🎉');
   }
   document.getElementById('refri-overlay').classList.remove('open');

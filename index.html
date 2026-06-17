@@ -612,8 +612,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-
           <span class="tag tag-star" style="font-size:11px;padding:4px 10px;">👑 Premium</span>
         </div>
         <div class="item-img-price">
-          <div class="price-main">R$ 34,99</div>
-          <div class="price-double">Triplo: R$ 39,99</div>
+          <div class="price-main">R$ 34,99</div>          
         </div>
       </div>
       <div class="item-img-body">
@@ -1418,7 +1417,7 @@ function openCustomize(key){
   selectChip('opt-queijo',QUEIJOS[0]);
   // Label dinâmico: King Angus → Triplo, demais → Duplo
   const isKing = b.triploLabel === true;
-  document.getElementById('opt-duplo-label').textContent = isKing ? '🔥 Tornar Triplo?' : '🔥 Tornar Duplo?';
+  document.getElementById('opt-duplo-label').textContent = isKing ?  : '🔥 Tornar Duplo?';
   const dOpts=[{label:'Não',val:false},{label:'Sim (+R$ 5,00)',val:true}];
   const dWrap=document.getElementById('opt-duplo');
   dWrap.innerHTML='';
@@ -1534,7 +1533,7 @@ function confirmAddToCart(){
   const details = [];
   details.push(`Ponto: ${sheetState.ponto}`);
   details.push(`Queijo: ${sheetState.queijo}`);
-  if(sheetState.isDouble) details.push(BURGERS[sheetState.key].triploLabel ? '🔥 TRIPLO' : '🔥 DUPLO');
+  if(sheetState.isDouble) details.push(BURGERS[sheetState.key].triploLabel ?  : '🔥 DUPLO');
   details.push(`Sachê: ${sheetState.sache}`);
   if(sheetState.extras.length) details.push('Extras: '+sheetState.extras.map(e=>e.name).join(', '));
   if(sheetState.remove.length) details.push('Sem: '+sheetState.remove.join(', '));

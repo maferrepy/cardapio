@@ -1405,7 +1405,7 @@ function outsideClose(e,id){
 
 function openCustomize(key){
   const b = BURGERS[key];
-  sheetState = {key,base:b.price,doublePrice:b.doublePrice,extras:[],remove:[],ponto:PONTOS[0],queijo:QUEIJOS[0],isDouble:false,sache:null,qty:1};
+  sheetState = {key,base:b.price,extras:[],remove:[],ponto:PONTOS[0],queijo:QUEIJOS[0],sache:null,qty:1};
   document.getElementById('cs-title').textContent = b.name;
   document.getElementById('cs-price').textContent = fmt(b.price);
   document.getElementById('cs-desc').textContent = b.desc;
@@ -1415,24 +1415,8 @@ function openCustomize(key){
   selectChip('opt-ponto',PONTOS[0]);
   buildChips('opt-queijo',QUEIJOS,null,v=>{sheetState.queijo=v;updateAddBtn();});
   selectChip('opt-queijo',QUEIJOS[0]);
-  // Label dinâmico: King Angus → Triplo, demais → Duplo
-  const isKing = b.triploLabel === true;
-  document.getElementById('opt-duplo-label').textContent = isKing ?  : '🔥 Tornar Duplo?';
-  const dOpts=[{label:'Não',val:false},{label:'Sim (+R$ 5,00)',val:true}];
-  const dWrap=document.getElementById('opt-duplo');
-  dWrap.innerHTML='';
-  dOpts.forEach(o=>{
-    const chip=document.createElement('div');
-    chip.className='opt-chip'+(o.val===false?' selected':'');
-    chip.textContent=o.label;
-    chip.onclick=()=>{
-      sheetState.isDouble=o.val;
-      dWrap.querySelectorAll('.opt-chip').forEach(c=>c.classList.remove('selected'));
-      chip.classList.add('selected');
-      updateAddBtn();
-    };
-    dWrap.appendChild(chip);
-  });
+
+
   // Sachê — obrigatório
   const sWrap=document.getElementById('opt-sache');
   sWrap.innerHTML='';
@@ -1504,7 +1488,7 @@ function selectChip(wrapperId,val){
 }
 
 function getSheetPrice(){
-  let p = sheetState.isDouble ? sheetState.doublePrice : sheetState.base;
+  let p = sheetState.base;
   sheetState.extras.forEach(e=>p+=e.price);
   return p * sheetState.qty;
 }
@@ -1533,7 +1517,6 @@ function confirmAddToCart(){
   const details = [];
   details.push(`Ponto: ${sheetState.ponto}`);
   details.push(`Queijo: ${sheetState.queijo}`);
-  if(sheetState.isDouble) details.push(BURGERS[sheetState.key].triploLabel ?  : '🔥 DUPLO');
   details.push(`Sachê: ${sheetState.sache}`);
   if(sheetState.extras.length) details.push('Extras: '+sheetState.extras.map(e=>e.name).join(', '));
   if(sheetState.remove.length) details.push('Sem: '+sheetState.remove.join(', '));
